@@ -36,7 +36,7 @@ class ClienteController extends Controller
     {
         $texto = $request->string('q')->trim()->substr(0, 100)->value();
 
-        $clientes = Cliente::query()
+        $clientes = Cliente::query()->conTieneInventario()
             ->when($texto, fn ($q) => $q->where(fn ($w) => $w
                 ->where('razon_social', 'ilike', "%{$texto}%")
                 ->orWhere('nit', 'like', "%{$texto}%")

@@ -117,6 +117,16 @@ class Cliente extends Model
         return sprintf('%s-%05d', $this->codigo_corto, $secuencia);
     }
 
+    public function scopeConTieneInventario(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
+    {
+        if (is_null($q->getQuery()->columns)) {
+            $q->select('clientes.*');
+        }
+
+        return $q->selectRaw("(EXISTS (SELECT 1 FROM existencias e WHERE e.cliente_id = clientes.id AND (e.cantidad_cuarentena > 0 OR e.cantidad_legalizada > 0))
+                OR EXISTS (SELECT 1 FROM bls b WHERE b.cliente_id = clientes.id AND b.estado IN ('EN_RECEPCION','RECIBIDO','DESPACHADO_PARCIAL'))) AS tiene_inventario")
+            ->withCasts(['tiene_inventario' => 'boolean']);
+    }
     /** Toma el siguiente consecutivo del cliente y arma el SKU (RS-07). */
     public function siguienteSku(): string
     {

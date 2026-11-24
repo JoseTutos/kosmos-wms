@@ -1,0 +1,1093 @@
+{
+  "info": {
+    "name": "Kosmos WMS · API v1 (Módulo 2 Inbound)",
+    "_postman_id": "5f0c1a7e-4b2d-4c3e-9a51-0d6c2b7e9a10",
+    "description": "Contrato para la app Flutter (rol OPERARIO).\n\n- Autenticación: Bearer token Sanctum (12 h). Login guarda {{token}}.\n- Todo POST/PUT lleva Idempotency-Key (UUID). Postman genera uno nuevo con {{$guid}}; para probar un reintento, fije el valor.\n- Errores: { mensaje, codigo, errores?, datos? }. 401 NO_AUTENTICADO · 403 SIN_PERMISO/PASSWORD_TEMPORAL · 404 NO_ENCONTRADO · 409 IDEMPOTENCIA_EN_PROCESO · 422 VALIDACION o regla de negocio (codigo) · 429 DEMASIADOS_INTENTOS.\n- Cantidades como texto decimal con 3 decimales (\"10.000\").\n- Las rutas de bulto y pallet usan su código (BUL-/PLT-), no el id.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://kosmos.local"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "bl_id",
+      "value": "1"
+    },
+    {
+      "key": "bulto",
+      "value": ""
+    },
+    {
+      "key": "pallet",
+      "value": ""
+    },
+    {
+      "key": "codigo",
+      "value": "BOD-01"
+    },
+    {
+      "key": "aforo_id",
+      "value": ""
+    },
+    {
+      "key": "detalle_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Solo OPERARIO. 200 { data: { token, tipo, expira_en, usuario } }. 401 CREDENCIALES_INVALIDAS · 423/403 USUARIO_BLOQUEADO, USUARIO_INACTIVO, ROL_SIN_ACCESO. Throttle 10/min.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"operario@kosmos.local\",\n  \"password\": \"********\",\n  \"dispositivo\": \"Zebra TC21 · Muelle 1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) { pm.collectionVariables.set('token', pm.response.json().data.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Yo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Usuario del token. 403 PASSWORD_TEMPORAL si debe cambiar la clave."
+          }
+        },
+        {
+          "name": "Cambiar contraseña",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "password"
+              ]
+            },
+            "description": "Conserva solo el token de este dispositivo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password_actual\": \"********\",\n  \"password\": \"NuevaClave2026\",\n  \"password_confirmation\": \"NuevaClave2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "204. Revoca solo este token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUS-006 Recepción",
+      "item": [
+        {
+          "name": "BL por recibir",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/recepciones?q=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recepciones?q="
+              ]
+            },
+            "description": "PROGRAMADO y EN_RECEPCION (primero los en recepción). ?q= filtra por número de BL."
+          }
+        },
+        {
+          "name": "Resumen de la recepción",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/recepciones/{{bl_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recepciones",
+                "{{bl_id}}"
+              ]
+            },
+            "description": "Totales recibido vs. esperado por producto del manifiesto."
+          }
+        },
+        {
+          "name": "Iniciar recepción",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/recepciones/{{bl_id}}/iniciar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recepciones",
+                "{{bl_id}}",
+                "iniciar"
+              ]
+            },
+            "description": "PROGRAMADO → EN_RECEPCION. 422 CLIENTE_INACTIVO, PRODUCTO_INACTIVO, BL_ESTADO_INVALIDO."
+          }
+        },
+        {
+          "name": "Registrar bulto (+ repetir ×N)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/recepciones/{{bl_id}}/bultos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recepciones",
+                "{{bl_id}}",
+                "bultos"
+              ]
+            },
+            "description": "201 { data: { bultos[], etiquetas[{tipo,codigo,zpl}], recepcion } }. pallet opcional: arma el bulto directo al pallet ABIERTO. 422 BL_NO_EN_RECEPCION, PRODUCTO_NO_EN_BL, PALLET_CERRADO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"peso_bruto_kg\": \"25.5\",\n  \"lineas\": [\n    {\n      \"producto_id\": 1,\n      \"cantidad\": \"10\"\n    }\n  ],\n  \"repetir\": 1,\n  \"pallet\": \"{{pallet}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) { pm.collectionVariables.set('bulto', pm.response.json().data.bultos[0].codigo); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver bulto",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bultos/{{bulto}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bultos",
+                "{{bulto}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Anular bulto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/bultos/{{bulto}}/anular",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "bultos",
+                "{{bulto}}",
+                "anular"
+              ]
+            },
+            "description": "Solo con el BL EN_RECEPCION; si está en un pallet ABIERTO se retira solo."
+          }
+        },
+        {
+          "name": "Finalizar recepción",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/recepciones/{{bl_id}}/finalizar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recepciones",
+                "{{bl_id}}",
+                "finalizar"
+              ]
+            },
+            "description": "EN_RECEPCION → RECIBIDO. Cierra pallets abiertos y registra los movimientos RECEPCION en CUARENTENA. 422 BULTOS_SIN_PALLET, OBSERVACION_REQUERIDA (diferencias o peso fuera de tolerancia).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observacion\": \"Llegaron 2 bultos menos.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUS-006 Pallets",
+      "item": [
+        {
+          "name": "Crear pallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/recepciones/{{bl_id}}/pallets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recepciones",
+                "{{bl_id}}",
+                "pallets"
+              ]
+            },
+            "description": "201 { data: { pallet, etiqueta{zpl} } }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) { pm.collectionVariables.set('pallet', pm.response.json().data.pallet.codigo); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver pallet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pallets/{{pallet}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pallets",
+                "{{pallet}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Agregar bulto (escaneo)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pallets/{{pallet}}/bultos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pallets",
+                "{{pallet}}",
+                "bultos"
+              ]
+            },
+            "description": "422 PALLET_CERRADO, BULTO_OTRO_BL, BULTO_EN_OTRO_PALLET, BULTO_ANULADO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bulto\": \"{{bulto}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Retirar bulto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pallets/{{pallet}}/retirar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pallets",
+                "{{pallet}}",
+                "retirar"
+              ]
+            },
+            "description": "Solo con el pallet ABIERTO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bulto\": \"{{bulto}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cerrar pallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pallets/{{pallet}}/cerrar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pallets",
+                "{{pallet}}",
+                "cerrar"
+              ]
+            },
+            "description": "422 PALLET_VACIO."
+          }
+        },
+        {
+          "name": "Reabrir pallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pallets/{{pallet}}/reabrir",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pallets",
+                "{{pallet}}",
+                "reabrir"
+              ]
+            },
+            "description": "Solo si no está UBICADO."
+          }
+        },
+        {
+          "name": "Eliminar pallet vacío",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/pallets/{{pallet}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "pallets",
+                "{{pallet}}"
+              ]
+            },
+            "description": "Solo ABIERTO y sin bultos. 204."
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUS-007 Etiquetas",
+      "item": [
+        {
+          "name": "Reimprimir (ZPL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/etiquetas/reimprimir",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "etiquetas",
+                "reimprimir"
+              ]
+            },
+            "description": "tipo: bulto | pallet. motivo: DANADA | NO_IMPRIMIO | ILEGIBLE | OTRO (con detalle). Sin motivo solo dentro de la ventana libre tras crear. 422 MOTIVO_REIMPRESION_REQUERIDO, ETIQUETA_TIPO_NO_PERMITIDO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"bulto\",\n  \"codigo\": \"{{bulto}}\",\n  \"motivo\": \"DANADA\",\n  \"detalle\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUS-008 Ubicar y trasladar",
+      "item": [
+        {
+          "name": "Destinos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/almacenamiento/destinos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "almacenamiento",
+                "destinos"
+              ]
+            },
+            "description": "Bodegas ACTIVAS con sus ubicaciones ACTIVAS y su ocupación."
+          }
+        },
+        {
+          "name": "Ubicar / trasladar pallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/almacenamiento/ubicar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "almacenamiento",
+                "ubicar"
+              ]
+            },
+            "description": "escaneo = etiqueta del destino: BODEGA o BODEGA/UBICACION (RS-38). 200 { data: { operacion UBICACION|TRASLADO, pallet, bodega, bodega_origen, alerta_sobrecupo, mensaje } }. 422 ESCANEO_NO_COINCIDE, UBICACION_REQUERIDA, BODEGA_INACTIVA, PALLET_ESTADO_INVALIDO, PALLET_EN_AFORO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pallet\": \"{{pallet}}\",\n  \"bodega\": \"BOD-01\",\n  \"ubicacion\": \"A-01-01\",\n  \"escaneo\": \"BOD-01/A-01-01\",\n  \"referencia\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "D14 Escaneo",
+      "item": [
+        {
+          "name": "Identificar código",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/escaneos/{{codigo}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "escaneos",
+                "{{codigo}}"
+              ]
+            },
+            "description": "{ data: { tipo: pallet|bulto|serial|ubicacion|bodega, codigo, datos } }. 422 CODIGO_NO_ENCONTRADO. La ubicación lleva '/': BOD-01/A-01-01."
+          }
+        }
+      ]
+    },
+    {
+      "name": "CUS-009 Aforo",
+      "item": [
+        {
+          "name": "Aforos en proceso",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/aforos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aforos"
+              ]
+            },
+            "description": "Solo EN_PROCESO, con lineas_total y lineas_contadas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) { pm.collectionVariables.set('aforo_id', pm.response.json().data[0]?.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Líneas del aforo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/aforos/{{aforo_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aforos",
+                "{{aforo_id}}"
+              ]
+            },
+            "description": "detalles[]: id, bulto, pallet, bodega, sku, unidad_medida, serializable, cantidad_manifiesto, cantidad_contada, diferencia, seriales."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) { pm.collectionVariables.set('detalle_id', pm.response.json().data.detalles[0]?.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar conteo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/aforos/{{aforo_id}}/conteos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aforos",
+                "{{aforo_id}}",
+                "conteos"
+              ]
+            },
+            "description": "Se puede corregir mientras esté EN_PROCESO; si cambia, los seriales de la línea se descartan. UND solo enteros. 422 AFORO_NO_EN_PROCESO, DETALLE_OTRO_AFORO, CANTIDAD_INVALIDA.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"detalle_id\": \"{{detalle_id}}\",\n  \"cantidad\": \"8\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Generar seriales",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "UUID nuevo por operación (D13). Un reintento con la MISMA clave devuelve la misma respuesta."
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/aforos/{{aforo_id}}/seriales",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aforos",
+                "{{aforo_id}}",
+                "seriales"
+              ]
+            },
+            "description": "Un serial SKU-0000 por unidad contada; reemplaza los anteriores. 201 { data: { detalle_id, sku, total, seriales[{codigo,zpl}] } }. 422 CONTEO_REQUERIDO, SERIAL_SOLO_UND.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"detalle_id\": \"{{detalle_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -23,7 +23,7 @@
     @endphp
 
     <form method="POST" action="{{ route('etiquetas.reimprimir') }}" target="_blank"
-          x-data="{ tipo: {{ Js::from(old('tipo', $tipos[0])) }}, motivo: {{ Js::from(old('motivo', '')) }}, ayudas: {{ Js::from($ayudas) }} }"
+                    x-data="{ tipo: {{ Js::from(old('tipo', in_array(request('tipo'), $tipos, true) ? request('tipo') : $tipos[0])) }}, motivo: {{ Js::from(old('motivo', '')) }}, ayudas: {{ Js::from($ayudas) }} }"
           class="flex max-w-2xl flex-col gap-5 rounded-[14px] border border-slate-200 bg-white p-6">
         @csrf
 
@@ -40,7 +40,7 @@
 
             <div class="flex flex-col gap-1.5">
                 <label for="codigo" class="text-sm font-medium">Código</label>
-                <input id="codigo" name="codigo" type="text" required maxlength="80" autocomplete="off" value="{{ old('codigo') }}"
+                    <input id="codigo" name="codigo" type="text" required maxlength="80" autocomplete="off" value="{{ old('codigo', request('codigo')) }}"
                        class="{{ $claseCampo }} font-mono" @error('codigo') aria-invalid="true" @enderror>
                 <span class="text-xs text-slate-500" x-text="ayudas[tipo]"></span>
                 @error('codigo') <p class="text-sm text-red-700">{{ $message }}</p> @enderror

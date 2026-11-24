@@ -65,9 +65,19 @@ enum CodigoError: string
     case UBICACION_NO_PERMITIDA     = 'UBICACION_NO_PERMITIDA';
     case UBICACION_OTRA_BODEGA      = 'UBICACION_OTRA_BODEGA';
     case UBICACION_INACTIVA         = 'UBICACION_INACTIVA';
+    case PALLET_EN_AFORO            = 'PALLET_EN_AFORO';
+    case BODEGA_CON_MERCANCIA       = 'BODEGA_CON_MERCANCIA';
+    case UBICACION_CON_MERCANCIA    = 'UBICACION_CON_MERCANCIA';
     case TRASLADO_MISMA_BODEGA      = 'TRASLADO_MISMA_BODEGA';
     case AFORO_NO_EN_PROCESO        = 'AFORO_NO_EN_PROCESO';
     case AFORO_INCOMPLETO           = 'AFORO_INCOMPLETO';
+    case AFORO_EN_PROCESO_EXISTENTE = 'AFORO_EN_PROCESO_EXISTENTE';
+    case AFORO_SIN_BULTOS           = 'AFORO_SIN_BULTOS';
+    case AFORO_LINEA_RESERVADA      = 'AFORO_LINEA_RESERVADA';
+    case DETALLE_OTRO_AFORO         = 'DETALLE_OTRO_AFORO';
+    case CONTEO_REQUERIDO           = 'CONTEO_REQUERIDO';
+    case SERIAL_SOLO_UND            = 'SERIAL_SOLO_UND';
+    case SERIALES_INCOMPLETOS       = 'SERIALES_INCOMPLETOS';
     case CONTEO_MENOR_A_LEGALIZADO  = 'CONTEO_MENOR_A_LEGALIZADO';
     case SERIAL_ESTADO_INVALIDO     = 'SERIAL_ESTADO_INVALIDO';
 
@@ -130,9 +140,19 @@ enum CodigoError: string
             self::UBICACION_NO_PERMITIDA     => 'La bodega no maneja ubicaciones internas.',
             self::UBICACION_OTRA_BODEGA      => 'La ubicación pertenece a otra bodega.',
             self::UBICACION_INACTIVA         => 'La ubicación está inactiva.',
+            self::PALLET_EN_AFORO            => 'El pallet tiene bultos en aforo: termine o cancele el conteo antes de moverlo.',
+            self::BODEGA_CON_MERCANCIA       => 'La bodega tiene mercancía (pallets ubicados o existencias). Trasládela antes de inactivarla.',
+            self::UBICACION_CON_MERCANCIA    => 'La ubicación tiene pallets ubicados. Trasládelos antes de inactivarla.',
             self::TRASLADO_MISMA_BODEGA      => 'El origen y el destino del traslado son la misma bodega.',
             self::AFORO_NO_EN_PROCESO        => 'El aforo no está en proceso.',
             self::AFORO_INCOMPLETO           => 'Faltan líneas por contar en el aforo.',
+            self::AFORO_EN_PROCESO_EXISTENTE => 'El BL ya tiene un aforo en proceso: ciérrelo o cancélelo antes de activar otro.',
+            self::AFORO_SIN_BULTOS           => 'Elija al menos un bulto ubicado para el aforo.',
+            self::AFORO_LINEA_RESERVADA      => 'El bulto tiene unidades reservadas para un despacho: no puede entrar al aforo.',
+            self::DETALLE_OTRO_AFORO         => 'La línea no pertenece a este aforo.',
+            self::CONTEO_REQUERIDO           => 'Registre primero el conteo de la línea.',
+            self::SERIAL_SOLO_UND            => 'Solo se serializan productos que se manejan en unidades (UND).',
+            self::SERIALES_INCOMPLETOS       => 'La cantidad de seriales no coincide con la cantidad contada: vuelva a generarlos.',
             self::CONTEO_MENOR_A_LEGALIZADO  => 'El conteo es menor que la cantidad ya legalizada: registre un ajuste (CUS-019).',
             self::SERIAL_ESTADO_INVALIDO     => 'El serial no permite esta operación en su estado actual.',
 

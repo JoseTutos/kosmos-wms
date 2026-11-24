@@ -1,0 +1,1 @@
+resources/views/etiquetas/index.blade.php<?php /**PATH E:\Kosmos\resources\views/etiquetas/_imprimir.blade.php ENDPATH**/ ?>

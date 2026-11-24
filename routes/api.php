@@ -13,12 +13,15 @@
  * Todas las respuestas son JSON, incluidos los errores (bootstrap/app.php → shouldRenderJsonWhen).
  */
 
+use App\Http\Controllers\Api\V1\AforoController as ApiAforoController;
 use App\Http\Controllers\Api\V1\AuthController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\BultoController;
+use App\Http\Controllers\Api\V1\EscaneoController;
 use App\Http\Controllers\Api\V1\EtiquetaController;
 use App\Http\Controllers\Api\V1\PalletController;
 use App\Http\Controllers\Api\V1\RecepcionController;
+use App\Http\Controllers\Api\V1\UbicarController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
 
@@ -55,8 +58,18 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
             // CUS-007 Reimpresión en la app (E4, E5, E7)
             Route::post('etiquetas/reimprimir', [EtiquetaController::class, 'reimprimir'])->name('etiquetas.reimprimir');
-            // CUS-008 Ubicación:  Route::post('almacenamiento/ubicar', ...);
-            // CUS-009 Aforo:      Route::post('aforos/{aforo}/conteos', ...);
+
+            // CUS-008 Ubicar y trasladar + D14 escaneo
+            Route::get('almacenamiento/destinos', [UbicarController::class, 'destinos'])->name('almacenamiento.destinos');
+            Route::post('almacenamiento/ubicar', [UbicarController::class, 'ubicar'])->name('almacenamiento.ubicar');
+            Route::get('escaneos/{codigo}', [EscaneoController::class, 'show'])->where('codigo', '.*')->name('escaneos.show');
+
+            // CUS-009 Aforo (app): conteo por línea y seriales opcionales (A1–A9)
+            Route::get('aforos', [ApiAforoController::class, 'index'])->name('aforos.index');
+            Route::get('aforos/{aforo}', [ApiAforoController::class, 'show'])->name('aforos.show');
+            Route::post('aforos/{aforo}/conteos', [ApiAforoController::class, 'conteos'])->name('aforos.conteos');
+            Route::post('aforos/{aforo}/seriales', [ApiAforoController::class, 'seriales'])->name('aforos.seriales');
+
             // CUS-014 Picking:    Route::post('picking/{orden}/escanear', ...);
         });
     });

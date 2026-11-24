@@ -95,7 +95,7 @@
                                             'url' => route('bodegas.inactivar', $b), 'metodo' => 'PATCH', 'peligro' => true,
                                             'titulo' => '¿Inactivar la bodega '.$b->codigo.'?',
                                             'detalle' => $b->nombre,
-                                            'puntos' => ['No aceptará mercancía nueva.', 'Solo se puede si está vacía (0 m² ocupados).', 'Podrá reactivarla cuando quiera.'],
+                                                                                        'puntos' => ['No aceptará mercancía nueva.', 'Solo se puede si no tiene pallets ubicados ni existencias.', 'Podrá reactivarla cuando quiera.'],
                                             'boton' => 'Inactivar bodega',
                                         ];
                                     @endphp

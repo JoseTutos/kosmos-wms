@@ -1,0 +1,1 @@
+resources/views/etiquetas/index.blade.php

@@ -14,16 +14,18 @@
  * Los módulos futuros se agregan dentro del grupo 3, cada uno con su middleware role.
  */
 
+use App\Http\Controllers\Web\AforoController;
 use App\Http\Controllers\Web\Auth\LoginController;
+use App\Http\Controllers\Web\BlController;
 use App\Http\Controllers\Web\BodegaController;
 use App\Http\Controllers\Web\ClienteController;
+use App\Http\Controllers\Web\EtiquetaController;
+use App\Http\Controllers\Web\EtiquetaInicialController;
 use App\Http\Controllers\Web\PerfilController;
 use App\Http\Controllers\Web\ProductoController;
 use App\Http\Controllers\Web\UbicacionController;
 use App\Http\Controllers\Web\UsuarioController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\BlController;
-use App\Http\Controllers\Web\EtiquetaController;
 
 /* ---------------------------------------------------------------
  | 1. Invitados
@@ -93,14 +95,23 @@ Route::middleware(['auth', 'cuenta.activa', 'cache.headers:private;no_store'])->
             Route::resource('bls', BlController::class);                                    // destroy: solo PROGRAMADO y sin bultos (B2)
             Route::patch('bls/{bl}/preinspeccion', [BlController::class, 'preinspeccion'])->name('bls.preinspeccion');
             Route::get('bls/{bl}/acta', [BlController::class, 'acta'])->name('bls.acta');  // descarga privada
-            // CUS-007 reimpresión web y CUS-009 aforos: pasos 4 y 6
+
+            // CUS-009 Aforo: activar, seguir, cerrar o cancelar y descargar el reporte (D1, D2, A1–A9)
+            Route::get('aforos', [AforoController::class, 'index'])->name('aforos.index');
+            Route::get('aforos/create', [AforoController::class, 'create'])->name('aforos.create');
+            Route::post('aforos', [AforoController::class, 'store'])->name('aforos.store');
+            Route::get('aforos/{aforo}', [AforoController::class, 'show'])->name('aforos.show');
+            Route::patch('aforos/{aforo}/cerrar', [AforoController::class, 'cerrar'])->name('aforos.cerrar');
+            Route::patch('aforos/{aforo}/cancelar', [AforoController::class, 'cancelar'])->name('aforos.cancelar');
+            Route::get('aforos/{aforo}/reporte/{formato}', [AforoController::class, 'reporte'])
+                ->whereIn('formato', ['pdf', 'xlsx'])->name('aforos.reporte');
         });
 
-        
         // ===== CUS-007 Reimpresión web en PDF (E6: Supervisor todas; Admin. de Maestros bodega y ubicación) =====
         Route::middleware('role:SUPERVISOR,ADMIN_MAESTROS')->group(function () {
             Route::get('etiquetas', [EtiquetaController::class, 'index'])->name('etiquetas.index');
             Route::post('etiquetas/reimprimir', [EtiquetaController::class, 'reimprimir'])->name('etiquetas.reimprimir');
+            Route::post('etiquetas/imprimir', EtiquetaInicialController::class)->name('etiquetas.imprimir');
         });
 
         // ===== Módulo 3 · Control y legalización — CUS-010, 011, 012, 019 =====

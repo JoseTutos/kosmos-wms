@@ -32,9 +32,12 @@
             <h1 class="text-2xl font-semibold tracking-tight">{{ $bodega->nombre }}</h1>
             <x-estado :activo="$bodega->aceptaMercancia()" :texto="Etiquetas::activo($bodega->estado)" />
         </div>
-        <a href="{{ route('bodegas.edit', $bodega) }}" class="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-slate-300 bg-white px-4 text-sm font-medium hover:bg-slate-50">
-            <x-icono nombre="editar" class="size-[18px]" /> Editar bodega
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+            @include('etiquetas._imprimir', ['tipo' => 'bodega', 'codigo' => $bodega->codigo, 'creado' => $bodega->created_at])
+            <a href="{{ route('bodegas.edit', $bodega) }}" class="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-slate-300 bg-white px-4 text-sm font-medium hover:bg-slate-50">
+                <x-icono nombre="editar" class="size-[18px]" /> Editar bodega
+            </a>
+        </div>
     </div>
 
     {{-- Indicadores --}}
@@ -107,7 +110,8 @@
                                     <td class="px-5 py-3 text-center tabular-nums">{{ $u->pallets_ubicados }}</td>
                                     <td class="px-5 py-3"><x-estado :activo="$activa" :texto="Etiquetas::activo($u->estado)" /></td>
                                     <td class="px-5 py-3">
-                                        <div class="flex justify-end">
+                                        <div class="flex justify-end gap-2">
+                                            @include('etiquetas._imprimir', ['tipo' => 'ubicacion', 'codigo' => "{$bodega->codigo}/{$u->codigo}", 'creado' => $u->created_at])
                                             @if ($activa)
                                                 @php
                                                     $accion = [

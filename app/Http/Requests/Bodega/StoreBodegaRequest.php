@@ -35,7 +35,7 @@ class StoreBodegaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'codigo'             => ['required', 'regex:/^[A-Z0-9-]{2,20}$/', 'unique:bodegas,codigo'],
+            'codigo'             => ['required', 'regex:/^[A-Z0-9-]{2,20}$/', 'unique:bodegas,codigo', new \App\Rules\CodigoMaestro], //EDITADO CON EL NEW
             'nombre'             => ['required', 'string', 'max:100'],
             'tamano_m2'          => ['required', 'numeric', 'decimal:0,2', 'gt:0', 'max:99999999'],
             'maneja_ubicaciones' => ['required', 'boolean'],

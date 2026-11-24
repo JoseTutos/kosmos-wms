@@ -81,6 +81,10 @@ class Ubicacion extends Model
 
     public function inactivar(): void
     {
+        if ($this->pallets()->where('estado', \App\Enums\EstadoPallet::UBICADO->value)->exists()) {
+            throw new \App\Exceptions\ReglaNegocioException(\App\Enums\CodigoError::UBICACION_CON_MERCANCIA, datos: ['ubicacion' => $this->codigo]);
+        }
+
         $this->estado = EstadoActiva::INACTIVA;
     }
 

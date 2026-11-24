@@ -62,7 +62,7 @@ class BodegaController extends Controller
     {
         $bodega = Bodega::create($request->validated());
 
-        return redirect()->route('bodegas.show', $bodega)->with('ok', "Bodega {$bodega->codigo} creada.");
+        return redirect()->route('bodegas.show', $bodega)->with('ok', "Bodega {$bodega->codigo} creada. Imprima su etiqueta.");
     }
 
     public function show(Bodega $bodega): View

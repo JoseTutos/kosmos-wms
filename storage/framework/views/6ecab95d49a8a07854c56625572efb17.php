@@ -21,7 +21,7 @@
     ?>
 
     <form method="POST" action="<?php echo e(route('etiquetas.reimprimir')); ?>" target="_blank"
-          x-data="{ tipo: <?php echo e(Js::from(old('tipo', $tipos[0]))); ?>, motivo: <?php echo e(Js::from(old('motivo', ''))); ?>, ayudas: <?php echo e(Js::from($ayudas)); ?> }"
+                    x-data="{ tipo: <?php echo e(Js::from(old('tipo', in_array(request('tipo'), $tipos, true) ? request('tipo') : $tipos[0]))); ?>, motivo: <?php echo e(Js::from(old('motivo', ''))); ?>, ayudas: <?php echo e(Js::from($ayudas)); ?> }"
           class="flex max-w-2xl flex-col gap-5 rounded-[14px] border border-slate-200 bg-white p-6">
         <?php echo csrf_field(); ?>
 
@@ -45,7 +45,7 @@ unset($__errorArgs, $__bag); ?>
 
             <div class="flex flex-col gap-1.5">
                 <label for="codigo" class="text-sm font-medium">Código</label>
-                <input id="codigo" name="codigo" type="text" required maxlength="80" autocomplete="off" value="<?php echo e(old('codigo')); ?>"
+                    <input id="codigo" name="codigo" type="text" required maxlength="80" autocomplete="off" value="<?php echo e(old('codigo', request('codigo'))); ?>"
                        class="<?php echo e($claseCampo); ?> font-mono" <?php $__errorArgs = ['codigo'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :

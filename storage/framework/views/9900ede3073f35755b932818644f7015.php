@@ -36,8 +36,10 @@
 <?php unset($__componentOriginald54ce5ecfb77cf9651bfc81950534c53); ?>
 <?php endif; ?>
         </div>
-        <a href="<?php echo e(route('bodegas.edit', $bodega)); ?>" class="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-slate-300 bg-white px-4 text-sm font-medium hover:bg-slate-50">
-            <?php if (isset($component)) { $__componentOriginal1cc77f99ef34ed73061e695fbeb001f6 = $component; } ?>
+        <div class="flex flex-wrap items-center gap-2">
+            <?php echo $__env->make('etiquetas._imprimir', ['tipo' => 'bodega', 'codigo' => $bodega->codigo, 'creado' => $bodega->created_at], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+            <a href="<?php echo e(route('bodegas.edit', $bodega)); ?>" class="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-slate-300 bg-white px-4 text-sm font-medium hover:bg-slate-50">
+                <?php if (isset($component)) { $__componentOriginal1cc77f99ef34ed73061e695fbeb001f6 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal1cc77f99ef34ed73061e695fbeb001f6 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.icono','data' => ['nombre' => 'editar','class' => 'size-[18px]']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('icono'); ?>
@@ -57,7 +59,8 @@
 <?php $component = $__componentOriginal1cc77f99ef34ed73061e695fbeb001f6; ?>
 <?php unset($__componentOriginal1cc77f99ef34ed73061e695fbeb001f6); ?>
 <?php endif; ?> Editar bodega
-        </a>
+            </a>
+        </div>
     </div>
 
     
@@ -201,7 +204,8 @@ unset($__errorArgs, $__bag); ?>
 <?php unset($__componentOriginald54ce5ecfb77cf9651bfc81950534c53); ?>
 <?php endif; ?></td>
                                     <td class="px-5 py-3">
-                                        <div class="flex justify-end">
+                                        <div class="flex justify-end gap-2">
+                                            <?php echo $__env->make('etiquetas._imprimir', ['tipo' => 'ubicacion', 'codigo' => "{$bodega->codigo}/{$u->codigo}", 'creado' => $u->created_at], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                                             <?php if($activa): ?>
                                                 <?php
                                                     $accion = [

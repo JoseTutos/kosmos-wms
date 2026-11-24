@@ -121,9 +121,20 @@ class Bodega extends Model
     }
 
     public function inactivar(): void
-    {
-        $this->estado = EstadoActiva::INACTIVA;
-    }
+        {
+            if ($this->tieneMercancia()) {
+                throw new \App\Exceptions\ReglaNegocioException(\App\Enums\CodigoError::BODEGA_CON_MERCANCIA, datos: ['bodega' => $this->codigo]);
+            }
+
+            $this->estado = EstadoActiva::INACTIVA;
+        }
+
+        /** Datos reales del Módulo 2: pallets UBICADOS o existencias con saldo. */
+        public function tieneMercancia(): bool
+        {
+            return $this->pallets()->where('estado', \App\Enums\EstadoPallet::UBICADO->value)->exists()
+                || $this->existencias()->where(fn ($q) => $q->where('cantidad_cuarentena', '>', 0)->orWhere('cantidad_legalizada', '>', 0))->exists();
+        }
 
     public function activar(): void
     {
