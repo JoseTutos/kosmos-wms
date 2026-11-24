@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+
+@theme {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+
+    --color-marca-50: #F5F8FD;   /* filas y opciones seleccionadas */
+    --color-marca-100: #E8EEF7;  /* avatares, íconos */
+    --color-marca-300: #9FB3CC;  /* títulos de sección del menú */
+    --color-marca-600: #1F5AA6;  /* botón principal, enlaces */
+    --color-marca-700: #194C8E;  /* hover del botón principal */
+    --color-marca-800: #24507F;  /* ítem activo del menú */
+    --color-marca-900: #17375E;  /* menú lateral, panel del login */
+
+    --color-acento-400: #FB923C; /* indicador del ítem activo */
+    --color-acento-600: #EA580C; /* logo */
+    --color-acento-700: #C2410C; /* acentos sobre blanco */
+
+    --color-fondo: #F4F6FA;      /* fondo de la aplicación */
+}
+
+/* Alpine: oculta los elementos hasta que Alpine los inicializa (evita parpadeos) */
+[x-cloak] {
+    display: none !important;
+}
