@@ -29,6 +29,8 @@ final class ConsecutivoService
 
     public const MAX_SERIAL = 9999;
 
+     public const MAX_ANUAL = 99999;
+
     public function siguiente(TipoConsecutivo $tipo, string $periodo, int $maximo): int
     {
         return DB::transaction(function () use ($tipo, $periodo, $maximo) {
@@ -74,6 +76,28 @@ final class ConsecutivoService
     public function serial(string $sku): string
     {
         return sprintf('%s-%04d', $sku, $this->siguiente(TipoConsecutivo::SER, $sku, self::MAX_SERIAL));
+    }
+
+    /** LEG-AAAA-00000 (L15). */
+    public function legalizacion(?DateTimeInterface $fecha = null): string
+    {
+        return $this->anual(TipoConsecutivo::LEG, $fecha);
+    }
+
+    /** AJ-AAAA-00000 (J8). */
+    public function ajuste(?DateTimeInterface $fecha = null): string
+    {
+        return $this->anual(TipoConsecutivo::AJ, $fecha);
+    }
+
+    /** Periodo AAAA en la zona horaria de la operación. */
+    private function anual(TipoConsecutivo $tipo, ?DateTimeInterface $fecha): string
+    {
+        $anio = CarbonImmutable::instance($fecha ?? now())
+            ->setTimezone(config('kosmos.zona_horaria', 'America/Bogota'))
+            ->format('Y');
+
+        return sprintf('%s-%s-%05d', $tipo->value, $anio, $this->siguiente($tipo, $anio, self::MAX_ANUAL));
     }
 
     /** DDMMAA en la zona horaria de la operación (no la del servidor). */

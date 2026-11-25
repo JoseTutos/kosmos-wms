@@ -8,6 +8,7 @@ use App\Enums\EstadoSerial;
 use App\Exceptions\ReglaNegocioException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Serial {SKU}-{0000} de una unidad, asignado solo en el aforo (RS-44, D7b).
@@ -39,6 +40,11 @@ class Serial extends Model
         return $this->belongsTo(BultoDetalle::class);
     }
 
+        /** L19: en qué LEG se legalizó (null mientras siga en cuarentena). */
+    public function legalizacionSerial(): HasOne
+    {
+        return $this->hasOne(LegalizacionSerial::class);
+    }
     // ---------------- Dominio ----------------
 
     public function legalizar(): void

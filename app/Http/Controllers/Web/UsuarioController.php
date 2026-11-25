@@ -69,33 +69,22 @@ class UsuarioController extends Controller
         $usuario = new User($request->validated());
 
         // 2. Asignamos la contraseña fija desde el .env y forzamos el cambio
-        $usuario->password = Hash::make(env('DEFAULT_USER_PASSWORD', 'Kosmos2024!'));
+        $clave = (string) config('kosmos.password_por_defecto');
+        $usuario->password = Hash::make($clave);
         $usuario->debe_cambiar_password = true;
 
         // 3. Guardamos en la base de datos (¡Importante!)
         $usuario->save();
 
-        // 4. Redirigimos con un mensaje de éxito simple (YA NO enviamos 'password_temporal')
+        // 4. El layout muestra el modal "una sola vez" con la clave por defecto
         return redirect()->route('usuarios.index')
-            ->with('ok', "Usuario {$usuario->email} creado exitosamente. Deberá usar la contraseña por defecto y cambiarla en su primer ingreso.");
+            ->with('ok', "Usuario {$usuario->email} creado. Deberá cambiar la contraseña en su primer ingreso.")
+            ->with('password_temporal', [
+                'clave'   => $clave,
+                'usuario' => "{$usuario->nombre} · {$usuario->email}",
+                'titulo'  => 'Usuario creado',
+            ]);
     }
-
-    //METODO STORE ANULADO POR CONFLICTO
-    /*public function store(StoreUsuarioRequest $request, AutenticacionService $auth): RedirectResponse
-    {
-        $usuario = new User($request->validated()); // solo nombre, email, rol ($fillable)
-        // estado ACTIVO e intentos 0 vienen de $attributes del modelo
-
-        //$temporal = $auth->asignarTemporal($usuario); // guarda el usuario con clave temporal (hash)
-
-        // 2. Asignamos la contraseña fija desde el .env y forzamos el cambio
-        $usuario->password = Hash::make(env('DEFAULT_USER_PASSWORD', 'Kosmos2024!'));
-        $usuario->debe_cambiar_password = true;
-
-        return redirect()->route('usuarios.index')
-            ->with('ok', "Usuario {$usuario->email} creado.")
-            ->with('password_temporal', $temporal);
-    }*/
 
     public function edit(User $usuario): View
     {
@@ -150,23 +139,18 @@ class UsuarioController extends Controller
         return back()->with('ok', 'Usuario activado.');
     }
 
-    /** Usuario que olvidó su clave: nueva temporal + cambio obligatorio en el siguiente ingreso. */
-    /*public function resetPassword(User $usuario, AutenticacionService $auth): RedirectResponse
-    {
-        $temporal = $auth->asignarTemporal($usuario);
-
-        return back()
-            ->with('ok', "Contraseña temporal generada para {$usuario->email}.")
-            ->with('password_temporal', $temporal);
-    }*/
         public function resetPassword(User $usuario, AutenticacionService $auth): RedirectResponse
     {
         // El servicio se encarga de hashear, guardar, borrar tokens y auditar
         $passwordPlano = $auth->restablecerConClavePorDefecto($usuario);
 
-        return back()
+            return back()
             ->with('ok', "Contraseña de {$usuario->email} restablecida exitosamente.")
-            ->with('password_temporal', $passwordPlano); // Solo si tu UI necesita mostrarla al admin
+            ->with('password_temporal', [
+                'clave'   => $passwordPlano,
+                'usuario' => "{$usuario->nombre} · {$usuario->email}",
+                'titulo'  => 'Contraseña restablecida',
+            ]);
     }
     /** Los métodos de dominio no persisten: aquí se guarda y se revoca la app. */
     private function guardarYRevocar(User $usuario): void

@@ -141,6 +141,32 @@
                             @else
                                 {{ $detalle->cantidad_contada }}
                             @endif
+                        
+                        {{-- A2/A3: conteo menor que lo legalizado bloquea el cierre; el atajo abre el ajuste prellenado --}}
+                            @php
+                                $faltante = $aforo->estaEnProceso() && $dif !== null
+                                    ? Milesimas::de($linea->cantidad_legalizada) - Milesimas::de($detalle->cantidad_contada)
+                                    : 0;
+                            @endphp
+                            @if ($faltante > 0)
+                                <span class="mt-1 block text-xs font-normal text-red-700">Menor que lo legalizado ({{ $linea->cantidad_legalizada }}): bloquea el cierre.</span>
+                                @if (Route::has('ajustes.create'))
+                                    @can('create', \App\Models\Ajuste::class)
+                                        <a href="{{ route('ajustes.create', [
+                                                'bulto'       => $linea->bulto->codigo,
+                                                'linea'       => $linea->id,
+                                                'tipo'        => 'NEGATIVO',
+                                                'estado'      => 'LEGALIZADA',
+                                                'cantidad'    => Milesimas::texto($faltante),
+                                                'descripcion' => 'AFO-'.$aforo->id.': se contaron '.$detalle->cantidad_contada.' y había '.$linea->cantidad_legalizada.' legalizadas (A2).',
+                                                'aforo'       => $aforo->id,
+                                            ]) }}"
+                                           class="mt-1 inline-flex h-8 items-center rounded-[8px] border border-red-300 bg-white px-2.5 text-xs font-semibold text-red-700 hover:bg-red-50">Registrar ajuste</a>
+                                    @endcan
+                                @endif
+                            @endif
+                        </td>
+                            
                         </td>
                         <td @class(['px-4 py-3 text-right font-semibold tabular-nums', 'text-red-700' => $dif !== null && $dif < 0, 'text-green-700' => $dif !== null && $dif > 0, 'text-slate-400' => $dif === null || $dif === 0])>
                             {{ $dif === null ? '—' : ($dif > 0 ? '+' : '').$detalle->diferencia }}

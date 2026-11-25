@@ -12,6 +12,11 @@ namespace App\Enums;
  */
 enum CodigoError: string
 {
+
+    // ---------- Núcleo de Inventario ----------
+    
+    
+    
     // ---------- Generales de la API ----------
     case VALIDACION          = 'VALIDACION';
     case NO_AUTENTICADO      = 'NO_AUTENTICADO';
@@ -81,7 +86,31 @@ enum CodigoError: string
     case CONTEO_MENOR_A_LEGALIZADO  = 'CONTEO_MENOR_A_LEGALIZADO';
     case SERIAL_ESTADO_INVALIDO     = 'SERIAL_ESTADO_INVALIDO';
 
+        // ---------- Control y Legalización (CUS-010, CUS-019) ----------
+    case BL_NO_LEGALIZABLE            = 'BL_NO_LEGALIZABLE';
+    case BL_SIN_CUARENTENA            = 'BL_SIN_CUARENTENA';
+    case LEGALIZACION_VACIA           = 'LEGALIZACION_VACIA';
+    case LEGALIZACION_OTRO_BL         = 'LEGALIZACION_OTRO_BL';
+    case BULTO_EN_AFORO               = 'BULTO_EN_AFORO';
+    case PALLET_SIN_UBICAR            = 'PALLET_SIN_UBICAR';
+    case BULTO_YA_LEGALIZADO          = 'BULTO_YA_LEGALIZADO';
+    case SERIAL_YA_LEGALIZADO         = 'SERIAL_YA_LEGALIZADO';
+    case SERIAL_OTRA_LINEA            = 'SERIAL_OTRA_LINEA';
+    case SERIAL_REPETIDO              = 'SERIAL_REPETIDO';
+    case LINEA_NO_SERIALIZADA         = 'LINEA_NO_SERIALIZADA';
+    case LINEA_SERIALIZADA            = 'LINEA_SERIALIZADA';
+    case CANTIDAD_SUPERA_CUARENTENA   = 'CANTIDAD_SUPERA_CUARENTENA';
+    case CANTIDAD_NO_ENTERA           = 'CANTIDAD_NO_ENTERA';
+    case SOPORTE_REQUERIDO            = 'SOPORTE_REQUERIDO';
+    case AJUSTE_DEJA_NEGATIVO         = 'AJUSTE_DEJA_NEGATIVO';
+    case AJUSTE_AFECTA_RESERVADAS     = 'AJUSTE_AFECTA_RESERVADAS';
+    case AJUSTE_DESCRIPCION_REQUERIDA = 'AJUSTE_DESCRIPCION_REQUERIDA';
+    case AJUSTE_REFERENCIA_REQUERIDA  = 'AJUSTE_REFERENCIA_REQUERIDA';
+    case AJUSTE_REFERENCIA_OTRA_LINEA = 'AJUSTE_REFERENCIA_OTRA_LINEA';
+    case AJUSTE_LINEA_EN_AFORO        = 'AJUSTE_LINEA_EN_AFORO';
+
     // ---------- Núcleo de Inventario ----------
+
     case CANTIDAD_INVALIDA       = 'CANTIDAD_INVALIDA';
     case CANTIDAD_INSUFICIENTE   = 'CANTIDAD_INSUFICIENTE';
     case EXISTENCIA_INSUFICIENTE = 'EXISTENCIA_INSUFICIENTE';
@@ -155,6 +184,28 @@ enum CodigoError: string
             self::SERIALES_INCOMPLETOS       => 'La cantidad de seriales no coincide con la cantidad contada: vuelva a generarlos.',
             self::CONTEO_MENOR_A_LEGALIZADO  => 'El conteo es menor que la cantidad ya legalizada: registre un ajuste (CUS-019).',
             self::SERIAL_ESTADO_INVALIDO     => 'El serial no permite esta operación en su estado actual.',
+
+                        self::BL_NO_LEGALIZABLE            => 'Solo se legaliza un BL RECIBIDO o DESPACHADO_PARCIAL.',
+            self::BL_SIN_CUARENTENA            => 'El BL no tiene unidades en cuarentena.',
+            self::LEGALIZACION_VACIA           => 'Agregue al menos un bulto, una cantidad o un serial.',
+            self::LEGALIZACION_OTRO_BL         => 'El bulto o serial es de otro BL: cada legalización cubre un solo BL.',
+            self::BULTO_EN_AFORO               => 'El bulto está en aforo: espere a que se cierre el conteo (RS-45).',
+            self::PALLET_SIN_UBICAR            => 'El bulto está en un pallet sin ubicar: ubíquelo antes de legalizar.',
+            self::BULTO_YA_LEGALIZADO          => 'El bulto ya está legalizado por completo.',
+            self::SERIAL_YA_LEGALIZADO         => 'El serial ya está legalizado.',
+            self::SERIAL_OTRA_LINEA            => 'El serial no pertenece a esta línea del bulto.',
+            self::SERIAL_REPETIDO              => 'El serial está repetido en la selección.',
+            self::LINEA_NO_SERIALIZADA         => 'La línea no tiene seriales: legalícela por cantidad (Modo B).',
+            self::LINEA_SERIALIZADA            => 'La línea tiene seriales: legalice el bulto completo o escanee los seriales (Modo C).',
+            self::CANTIDAD_SUPERA_CUARENTENA   => 'La cantidad supera lo que está en cuarentena.',
+            self::CANTIDAD_NO_ENTERA           => 'El producto se maneja en unidades (UND): la cantidad debe ser entera.',
+            self::SOPORTE_REQUERIDO            => 'Adjunte el soporte: PDF, JPG o PNG de hasta 10 MB.',
+            self::AJUSTE_DEJA_NEGATIVO         => 'El ajuste dejaría cantidades negativas (EX-01).',
+            self::AJUSTE_AFECTA_RESERVADAS     => 'El ajuste toca unidades reservadas o despachadas: modifique primero la orden de salida (EX-02).',
+            self::AJUSTE_DESCRIPCION_REQUERIDA => 'Describa el motivo del ajuste (EX-03).',
+            self::AJUSTE_REFERENCIA_REQUERIDA  => 'Con el motivo Corrección de registro indique el movimiento que corrige (RS-57).',
+            self::AJUSTE_REFERENCIA_OTRA_LINEA => 'El movimiento que corrige pertenece a otra línea.',
+            self::AJUSTE_LINEA_EN_AFORO        => 'La línea está en aforo: solo admite un ajuste negativo de legalizadas (A2).',
 
             self::CANTIDAD_INVALIDA       => 'La cantidad debe ser mayor que cero.',
             self::CANTIDAD_INSUFICIENTE   => 'La cantidad supera lo disponible en la línea.',

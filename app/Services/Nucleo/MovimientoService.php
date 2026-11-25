@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Support\Milesimas;
 use Illuminate\Support\Facades\DB;
 use LogicException;
+use App\Enums\TipoAjuste;
 
 /**
  * Único que inserta en movimientos (kardex de solo inserción, SEG02) y, en la misma
@@ -98,6 +99,55 @@ final class MovimientoService
             $this->registrar(TipoMovimiento::TRASLADO, $linea, Milesimas::texto($milesimas), $destinoId, $estadoLegal, $usuario, $documentoRef),
         ];
     }
+
+    /**
+     * CUS-010 (L17): dos filas LEGALIZACION en la bodega del pallet, −q en CUARENTENA y +q en LEGALIZADA.
+     * El saldo del kardex por línea no cambia (sigue igual a la recibida); la existencia pasa de cuarentena a legalizada.
+     * El llamador ya aplicó BultoDetalle::legalizarPorCantidad() o legalizarSeriales() y guarda la línea.
+     *
+     * @return array{0: Movimiento, 1: Movimiento}
+     */
+    public function legalizar(
+        BultoDetalle $linea,
+        string|int $cantidad,
+        int $bodegaId,
+        User $usuario,
+        ?string $documentoRef = null,
+    ): array {
+        $milesimas = Milesimas::de($cantidad);
+
+        if ($milesimas <= 0) {
+            throw new ReglaNegocioException(CodigoError::CANTIDAD_INVALIDA);
+        }
+
+        return [
+            $this->registrar(TipoMovimiento::LEGALIZACION, $linea, Milesimas::texto(-$milesimas), $bodegaId, EstadoLegal::CUARENTENA, $usuario, $documentoRef),
+            $this->registrar(TipoMovimiento::LEGALIZACION, $linea, Milesimas::texto($milesimas), $bodegaId, EstadoLegal::LEGALIZADA, $usuario, $documentoRef),
+        ];
+    }
+
+    /**
+     * CUS-019 (J8): una fila AJUSTE con signo en el estado afectado. La cantidad va sin signo (> 0).
+     * El llamador ya aplicó BultoDetalle::ajustar() y guarda la línea.
+     */
+    public function ajustar(
+        BultoDetalle $linea,
+        TipoAjuste $tipo,
+        string|int $cantidad,
+        ?int $bodegaId,
+        EstadoLegal $estado,
+        User $usuario,
+        ?string $documentoRef = null,
+    ): Movimiento {
+        $milesimas = Milesimas::de($cantidad);
+
+        if ($milesimas <= 0) {
+            throw new ReglaNegocioException(CodigoError::CANTIDAD_INVALIDA, 'La cantidad del ajuste va sin signo: el tipo indica si suma o resta.');
+        }
+
+        return $this->registrar(TipoMovimiento::AJUSTE, $linea, Milesimas::texto($tipo->signo() * $milesimas), $bodegaId, $estado, $usuario, $documentoRef);
+    }
+
 
     private function exigirTransaccion(): void
     {

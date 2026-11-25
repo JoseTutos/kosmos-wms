@@ -5,6 +5,10 @@ return [
     // Los periodos diarios de los consecutivos (PLT/BUL-DDMMAA) se cortan a medianoche de esta zona.
     'zona_horaria' => env('KOSMOS_ZONA_HORARIA', 'America/Bogota'),
 
+    // CUS-004: contraseña con la que nace un usuario y a la que vuelve al restablecerla.
+    // Siempre exige cambiarla en el primer ingreso. Se cambia solo en el .env (DEFAULT_USER_PASSWORD).
+    'password_por_defecto' => env('DEFAULT_USER_PASSWORD', 'Kosmos2024!'),
+
     /*
      | Parámetros de negocio editables (tabla configuraciones). Estos son los valores por defecto:
      | ConfiguracionSeeder los inserta si no existen y ConfiguracionService los usa si falta la fila.

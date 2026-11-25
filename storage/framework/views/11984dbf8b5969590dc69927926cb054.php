@@ -255,6 +255,32 @@
                                 <?php echo e($detalle->cantidad_contada); ?>
 
                             <?php endif; ?>
+                        
+                        
+                            <?php
+                                $faltante = $aforo->estaEnProceso() && $dif !== null
+                                    ? Milesimas::de($linea->cantidad_legalizada) - Milesimas::de($detalle->cantidad_contada)
+                                    : 0;
+                            ?>
+                            <?php if($faltante > 0): ?>
+                                <span class="mt-1 block text-xs font-normal text-red-700">Menor que lo legalizado (<?php echo e($linea->cantidad_legalizada); ?>): bloquea el cierre.</span>
+                                <?php if(Route::has('ajustes.create')): ?>
+                                    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('create', \App\Models\Ajuste::class)): ?>
+                                        <a href="<?php echo e(route('ajustes.create', [
+                                                'bulto'       => $linea->bulto->codigo,
+                                                'linea'       => $linea->id,
+                                                'tipo'        => 'NEGATIVO',
+                                                'estado'      => 'LEGALIZADA',
+                                                'cantidad'    => Milesimas::texto($faltante),
+                                                'descripcion' => 'AFO-'.$aforo->id.': se contaron '.$detalle->cantidad_contada.' y había '.$linea->cantidad_legalizada.' legalizadas (A2).',
+                                                'aforo'       => $aforo->id,
+                                            ])); ?>"
+                                           class="mt-1 inline-flex h-8 items-center rounded-[8px] border border-red-300 bg-white px-2.5 text-xs font-semibold text-red-700 hover:bg-red-50">Registrar ajuste</a>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </td>
+                            
                         </td>
                         <td class="<?php echo \Illuminate\Support\Arr::toCssClasses(['px-4 py-3 text-right font-semibold tabular-nums', 'text-red-700' => $dif !== null && $dif < 0, 'text-green-700' => $dif !== null && $dif > 0, 'text-slate-400' => $dif === null || $dif === 0]); ?>">
                             <?php echo e($dif === null ? '—' : ($dif > 0 ? '+' : '').$detalle->diferencia); ?>

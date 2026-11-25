@@ -69,54 +69,7 @@ class AutenticacionService
      *
      * @param 'web'|'api' $canal
      */
-    /*public function autenticar(string $email, string $password, string $canal): User
-    {
-        $existe = User::where('email', $email)->first();
-
-        if (! $existe) {
-            Hash::check($password, self::HASH_FICTICIO); // iguala el tiempo de respuesta
-            $this->fallar(self::MSG_CREDENCIALES);
-        }
-
-        [$user, $claveCorrecta] = DB::transaction(function () use ($existe, $password, $canal) {
-            $u = User::whereKey($existe->getKey())->lockForUpdate()->first();
-            $estabaBloqueado = $u->estado === EstadoUsuario::BLOQUEADO;
-
-            $ok = $u->autenticar($password);   // dominio: contador y bloqueo
-            $u->save();                         // solo escribe si hubo cambios
-
-            if (! $ok && ! $estabaBloqueado && $u->estado === EstadoUsuario::BLOQUEADO) {
-                $u->tokens()->delete();
-                $this->auditar($u, 'usuario bloqueado por intentos fallidos', ['canal' => $canal]);
-            } elseif (! $ok && $u->wasChanged('intentos_fallidos')) {
-                $this->auditar($u, 'login fallido', ['canal' => $canal, 'intentos' => $u->intentos_fallidos]);
-            }
-
-            return [$u, $ok];
-        });
-
-        if (! $claveCorrecta) {
-            $this->fallar(self::MSG_CREDENCIALES);
-        }
-
-        // Clave correcta: ahora sí se puede decir por qué no entra.
-        if ($user->estado === EstadoUsuario::BLOQUEADO) {
-            $this->fallar('Usuario bloqueado por intentos fallidos. Contacte al Administrador del Sistema.');
-        }
-        if ($user->estado === EstadoUsuario::INACTIVO) {
-            $this->fallar('Usuario inactivo. Contacte al Administrador del Sistema.');
-        }
-
-        if (! $user->tieneRol(...self::ROLES_POR_CANAL[$canal])) {
-            $this->fallar($canal === 'api'
-                ? 'Su rol no tiene acceso a la aplicación móvil.'
-                : 'Su rol solo tiene acceso desde la aplicación móvil.');
-        }
-
-        $this->auditar($user, 'login', ['canal' => $canal], causante: $user);
-
-        return $user;
-    }*/
+ 
     public function autenticar(string $email, string $password, string $canal): User
     {
         $existe = User::where('email', $email)->first();
@@ -216,7 +169,7 @@ class AutenticacionService
         // 1. Obtenemos la contraseña fija. 
         // NOTA ACADÉMICA: En producción, es mejor usar config('services.default_password') 
         // que env() directo, ya que env() devuelve null si el config está cacheado.
-        $passwordPlano = env('DEFAULT_USER_PASSWORD', 'Kosmos2024!');
+        $passwordPlano = (string) config('kosmos.password_por_defecto');
 
         // 2. ¡CRÍTICO! Encriptamos la contraseña antes de guardarla
         $passwordHasheada = Hash::make($passwordPlano);

@@ -32,6 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Solo nginx habla con la app (Docker Compose). Si cambia la topología, restrinja la IP.
         $middleware->trustProxies(at: '*');
+
+          // S1 (Módulo 3): máximo absoluto de 12 h para la sesión web, además de los 120 min de inactividad.
+        $middleware->web(append: [\App\Http\Middleware\SesionAbsoluta::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $esApi = fn (Request $request) => $request->is('api/*');

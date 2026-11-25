@@ -52,6 +52,8 @@ final class MenuPrincipal
              'desc' => 'Pendiente de legalizar.', 'roles' => [Rol::SUPERVISOR, Rol::ANALISTA, Rol::GERENTE]],
             ['label' => 'Ajustes de inventario', 'ruta' => 'ajustes.index', 'activo' => 'ajustes.*', 'icono' => 'ajuste',
              'desc' => 'Corrección de inventario con motivo.', 'roles' => [Rol::SUPERVISOR]],
+             ['label' => 'Históricos', 'ruta' => 'historicos.legalizaciones.index', 'activo' => 'historicos.*', 'icono' => 'kardex',
+             'desc' => 'Legalizaciones registradas y soportes.', 'roles' => [Rol::SUPERVISOR, Rol::ANALISTA, Rol::GERENTE]], 
         ]],
         ['titulo' => 'Salida', 'items' => [
             ['label' => 'Órdenes de salida', 'ruta' => 'ordenes-salida.index', 'activo' => 'ordenes-salida.*', 'icono' => 'salida',

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Vistas;
 
 use App\Enums\Rol;
+use App\Models\Aforo;
 use App\Models\Bl;
 use App\Models\BlDetalle;
 use App\Models\Bodega;
@@ -15,7 +16,9 @@ use Illuminate\Support\Facades\File;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\CreaUsuarios;
 use Tests\TestCase;
-
+use App\Models\Legalizacion;
+use App\Models\Ajuste;
+use App\Models\Bulto;
 /**
  * L5 – Prueba de humo: cada pantalla web actual responde 200 con el rol correcto.
  * Atrapa los errores de Blade (L1, L2) antes de abrir la pantalla en el navegador.
@@ -53,19 +56,39 @@ final class RenderizadoVistasTest extends TestCase
             'bls.show'           => ['SUPERVISOR', 'bls.show', 'bl'],
             'bls.edit'           => ['SUPERVISOR', 'bls.edit', 'bl'],
 
+            // Módulo 2 · Aforo (CUS-009)
+            'aforos.index'       => ['SUPERVISOR', 'aforos.index', null],
+            'aforos.create'      => ['SUPERVISOR', 'aforos.create', null],
+            'aforos.show'        => ['SUPERVISOR', 'aforos.show', 'aforo'],
+
             // Módulo 2 · Etiquetas (CUS-007)
             'etiquetas.index'    => ['SUPERVISOR', 'etiquetas.index', null],
+
+             // Módulo 3 · Legalización (CUS-010)
+            'legalizaciones.index'  => ['ANALISTA', 'legalizaciones.index', null],
+            'legalizaciones.create' => ['ANALISTA', 'legalizaciones.create', null],
+            'legalizaciones.show'   => ['ANALISTA', 'legalizaciones.show', 'legalizacion'],
+
+                        // Módulo 3 · Ajustes (CUS-019)
+            'ajustes.index'         => ['SUPERVISOR', 'ajustes.index', null],
+            'ajustes.create'        => ['SUPERVISOR', 'ajustes.create', null],
+            'ajustes.show'          => ['SUPERVISOR', 'ajustes.show', 'ajuste'],
+            
+            // Módulo 3 · Estado legal (CUS-011) e Históricos (CUS-012)
+            'estado-legal.index'               => ['GERENTE', 'estado-legal.index', null],
+            'estado-legal.show'                => ['GERENTE', 'estado-legal.show', 'bl'],
+            'historicos.legalizaciones.index'  => ['GERENTE', 'historicos.legalizaciones.index', null],
+            'historicos.legalizaciones.show'   => ['GERENTE', 'historicos.legalizaciones.show', 'legalizacion'],
         ];
+
+        
     }
 
     /**
      * Pantallas con ruta pero sin vista todavía. Se reportan como "skipped" (no como falla).
      * Al construir la vista, quite su línea de aquí y la prueba la empieza a exigir.
      */
-    private const PENDIENTES = [
-        'productos.importar'   => 'falta resources/views/productos/importar.blade.php',
-        'modal_clave_temporal' => 'usuarios.index aún no muestra la sesión password_temporal',
-    ];
+    private const PENDIENTES = [];
 
     private function saltarSiPendiente(string $clave): void
     {
@@ -107,10 +130,15 @@ final class RenderizadoVistasTest extends TestCase
         $this->crearDatos();
 
         $this->actingAs($this->crearUsuario(Rol::ADMIN_SISTEMA))
-            ->withSession(['ok' => 'Usuario actualizado.', 'password_temporal' => 'Temp4821xq'])
+            ->withSession(['ok' => 'Usuario actualizado.', 'password_temporal' => [
+                'clave'   => config('kosmos.password_por_defecto'),
+                'usuario' => 'Ana Pérez · ana@kosmos.test',
+                'titulo'  => 'Contraseña restablecida',
+            ]])
             ->get(route('usuarios.index'))
             ->assertOk()
-            ->assertSee('Temp4821xq');
+            ->assertSee('Contraseña restablecida')
+            ->assertSee(config('kosmos.password_por_defecto'));
     }
 
     public function test_login_se_renderiza(): void
@@ -216,12 +244,42 @@ final class RenderizadoVistasTest extends TestCase
             'bultos_esperados' => 10, 'unidades_esperadas' => '100', 'peso_bruto_kg' => '250.5',
         ]);
 
+        $aforo = Aforo::create(['bl_id' => $bl->id]);
+
+         $legalizacion = Legalizacion::create([
+            'consecutivo'         => 'LEG-2026-00001',
+            'bl_id'               => $bl->id,
+            'tipo_documento'      => 'VOBO',
+            'numero_autorizacion' => 'VB-2026-0001',
+            'fecha_autorizacion'  => now()->toDateString(),
+            'soporte_path'        => 'legalizaciones/2026/soporte.pdf',
+            'usuario_id'          => $this->crearUsuario(Rol::ANALISTA)->id,
+        ]);
+
+        $bulto = Bulto::create(['codigo' => 'BUL-251126-0001', 'bl_id' => $bl->id, 'peso_bruto_kg' => '25.000'])->refresh();
+        $linea = $bulto->agregarLinea($producto, '10');
+        $linea->save();
+
+        $ajuste = Ajuste::create([
+            'consecutivo'      => 'AJ-2026-00001',
+            'bulto_detalle_id' => $linea->id,
+            'tipo'             => 'POSITIVO',
+            'estado_afectado'  => 'CUARENTENA',
+            'cantidad'         => '1',
+            'motivo'           => 'SOBRANTE',
+            'descripcion'      => 'Sobrante encontrado en el recorrido.',
+            'usuario_id'       => $this->crearUsuario(Rol::SUPERVISOR)->id,
+        ]);
+
         return [
             'usuario'  => $this->crearUsuario(Rol::OPERARIO),
             'cliente'  => $cliente,
             'producto' => $producto,
             'bodega'   => $bodega,
             'bl'       => $bl,
+            'aforo'    => $aforo,
+            'legalizacion' => $legalizacion,
+            'ajuste'       => $ajuste,
         ];
     }
 }

@@ -26,6 +26,10 @@ use App\Http\Controllers\Web\ProductoController;
 use App\Http\Controllers\Web\UbicacionController;
 use App\Http\Controllers\Web\UsuarioController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Web\LegalizacionController;
+use App\Http\Controllers\Web\AjusteController;
+use App\Http\Controllers\Web\EstadoLegalController;
+use App\Http\Controllers\Web\HistoricoLegalizacionController;
 
 /* ---------------------------------------------------------------
  | 1. Invitados
@@ -115,11 +119,36 @@ Route::middleware(['auth', 'cuenta.activa', 'cache.headers:private;no_store'])->
         });
 
         // ===== Módulo 3 · Control y legalización — CUS-010, 011, 012, 019 =====
-        // Route::middleware('role:ANALISTA,SUPERVISOR')->group(function () { ... });
+        // CUS-010 Legalización (L1: ANALISTA y SUPERVISOR). Sin update ni destroy: la LEG es inmutable (L18).
+        Route::middleware('role:ANALISTA,SUPERVISOR')->group(function () {
+            Route::get('legalizaciones', [LegalizacionController::class, 'index'])->name('legalizaciones.index');
+            Route::get('legalizaciones/create', [LegalizacionController::class, 'create'])->name('legalizaciones.create');
+            Route::get('legalizaciones/autorizacion', [LegalizacionController::class, 'autorizacion'])->name('legalizaciones.autorizacion'); // L12
+            Route::post('legalizaciones', [LegalizacionController::class, 'store'])->name('legalizaciones.store');
+            Route::get('legalizaciones/{legalizacion}', [LegalizacionController::class, 'show'])->name('legalizaciones.show');
+            Route::get('legalizaciones/{legalizacion}/soporte', [LegalizacionController::class, 'soporte'])->name('legalizaciones.soporte'); // descarga privada
+        });
 
-        // ===== Módulo 4 · Salida — CUS-013, 014 (cierre parcial) =====
-        // Route::middleware('role:ANALISTA,SUPERVISOR')->group(function () { ... });
+        // CUS-019 Ajustes de inventario (J1, RS-54: solo SUPERVISOR). Sin update ni destroy: solo inserción.
+        Route::middleware('role:SUPERVISOR')->group(function () {
+            Route::get('ajustes', [AjusteController::class, 'index'])->name('ajustes.index');
+            Route::get('ajustes/create', [AjusteController::class, 'create'])->name('ajustes.create');
+            Route::post('ajustes', [AjusteController::class, 'store'])->name('ajustes.store');
+            Route::get('ajustes/{ajuste}', [AjusteController::class, 'show'])->name('ajustes.show');
+            Route::get('ajustes/{ajuste}/soporte', [AjusteController::class, 'soporte'])->name('ajustes.soporte'); // descarga privada
+        });
 
+        // CUS-011 Estado legal y CUS-012 Históricos (C4, H1–H3): solo lectura. El OPERARIO no tiene acceso (RS-53).
+        Route::middleware('role:SUPERVISOR,ANALISTA,GERENTE')->group(function () {
+            Route::get('estado-legal', [EstadoLegalController::class, 'index'])->name('estado-legal.index');
+            Route::get('estado-legal/{bl}', [EstadoLegalController::class, 'show'])->name('estado-legal.show');
+
+            Route::get('historicos/legalizaciones', [HistoricoLegalizacionController::class, 'index'])->name('historicos.legalizaciones.index');
+            Route::get('historicos/legalizaciones/exportar/{formato}', [HistoricoLegalizacionController::class, 'exportar'])
+                ->whereIn('formato', ['xlsx', 'csv'])->name('historicos.legalizaciones.exportar');
+            Route::get('historicos/legalizaciones/{legalizacion}', [HistoricoLegalizacionController::class, 'show'])->name('historicos.legalizaciones.show');
+            Route::get('historicos/legalizaciones/{legalizacion}/soporte', [HistoricoLegalizacionController::class, 'soporte'])->name('historicos.legalizaciones.soporte');
+        });
         // ===== Módulo 5 · Consultas y auditoría — CUS-015 a 018 =====
         // Route::middleware('role:ANALISTA,SUPERVISOR,GERENTE')->group(function () { ... });
         // Route::middleware('role:ADMIN_SISTEMA,GERENTE')->group(function () { ... }); // bitácora

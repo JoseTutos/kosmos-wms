@@ -2,24 +2,21 @@
 
 namespace App\Models\Concerns;
 
-use App\Exceptions\ReglaNegocioException;
-use Illuminate\Database\Eloquent\Model;
+use LogicException;
 
 /**
- * Tablas append-only (movimientos, auditoria, legalizaciones,
- * legalizacion_detalles, ajustes). Bloquea UPDATE/DELETE desde Eloquent;
- * los triggers y el REVOKE de PostgreSQL son la última barrera (RS-56, SEG02).
+ * Registros de solo inserción del Módulo 3 (RS-48, RS-51, L18): no se editan ni se borran;
+ * un error se corrige con un Ajuste (CUS-019). El modelo además declara UPDATED_AT = null.
  */
 trait SoloInsercion
 {
     public static function bootSoloInsercion(): void
     {
-        static::updating(function (Model $modelo) {
-            throw ReglaNegocioException::soloInsercion($modelo->getTable(), 'UPDATE');
-        });
+        $rechazar = fn () => throw new LogicException(
+            class_basename(static::class).' es de solo inserción: corrija con un ajuste (RS-48, RS-57).'
+        );
 
-        static::deleting(function (Model $modelo) {
-            throw ReglaNegocioException::soloInsercion($modelo->getTable(), 'DELETE');
-        });
+        static::updating($rechazar);
+        static::deleting($rechazar);
     }
 }

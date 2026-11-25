@@ -90,6 +90,11 @@ class Bl extends Model
         return $this->hasMany(Existencia::class);
     }
 
+      public function legalizaciones(): HasMany
+    {
+        return $this->hasMany(Legalizacion::class);
+    }
+
     // ---------------- Dominio ----------------
 
     /** CUS-005: el BL y su manifiesto solo se editan o eliminan mientras está PROGRAMADO. */

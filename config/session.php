@@ -34,6 +34,9 @@ return [
 
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
 
+        // S1 (Módulo 3): máximo absoluto en minutos desde el inicio de sesión (12 h), además de la inactividad.
+    'absolute_lifetime' => (int) env('SESSION_ABSOLUTE_LIFETIME', 720),
+
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
